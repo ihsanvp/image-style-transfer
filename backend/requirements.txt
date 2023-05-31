@@ -1,0 +1,9 @@
+torch
+torchvision
+fastapi
+python-multipart
+uvicorn[standard]
+celery[redis]
+websockets
+aioredis
+eventlet
