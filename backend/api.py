@@ -1,8 +1,10 @@
 from fastapi import FastAPI, UploadFile, WebSocket
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from celery import uuid
 import settings
 import os
-import aioredis
+from redis import asyncio as aioredis
 import shutil
 from fastapi import UploadFile
 import os
@@ -28,6 +30,20 @@ os.makedirs(settings.OUTPUTS_DIR, exist_ok=True)
 
 app = FastAPI()
 
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]    
+)
+
+app.mount("/outputs", StaticFiles(directory="outputs"))
 
 @app.get("/")
 async def index():
@@ -53,6 +69,8 @@ async def generate(content_img: UploadFile, style_img: UploadFile):
         "alpha": settings.ALPHA,
         "beta": settings.BETA
     })
+
+    print("start", task_id)
 
     return {
         "id": task.id

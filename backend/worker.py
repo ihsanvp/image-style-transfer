@@ -5,6 +5,7 @@ import json
 from model import generate_styled_image
 from datetime import datetime
 from celery import Celery
+from torchvision.utils import save_image
 
 redis_url = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/0")
 worker = Celery(__name__, broker=redis_url, backend=redis_url)
@@ -48,7 +49,7 @@ def generate_image_task(
 
     publish(total=total, completed=completed)
 
-    for _ in generate_styled_image(
+    for epoch in generate_styled_image(
         content_img_path=content_img,
         style_img_path=style_img,
         output_path=output_path,
@@ -59,3 +60,5 @@ def generate_image_task(
     ):
         completed += 1
         publish(total=total, completed=completed)
+
+

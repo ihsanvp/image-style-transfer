@@ -186,6 +186,8 @@ class generate_styled_image(object):
             total_loss.backward()  # type: ignore
             self.optimizer.step()
 
+            save_generated_image(self.output_path, self.generated_image, self.image_size)
+
             return self.epoch
 
         raise StopIteration()
