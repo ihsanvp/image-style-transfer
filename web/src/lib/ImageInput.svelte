@@ -35,7 +35,7 @@
         </div>
     {/if}
 </div>
-<div class="h-96">
+<div class="h-80">
     {#if image}
         <div class="w-full h-full border border-primary-800 rounded">
             <img

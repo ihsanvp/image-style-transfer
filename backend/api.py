@@ -8,7 +8,9 @@ from redis import asyncio as aioredis
 import shutil
 from fastapi import UploadFile
 import os
-from worker import generate_image_task, dummy_task
+from worker import generate_image_task, dummy_task, worker
+import time
+import json
 
 
 async def save_file(file: UploadFile):
@@ -60,6 +62,8 @@ async def generate(content_img: UploadFile, style_img: UploadFile):
     style_image_path = await save_file(style_img)
     output_image_path = os.path.join(settings.OUTPUTS_DIR, f"{task_id}.jpg")
 
+    time.sleep(0.5)
+
     task = generate_image_task.apply_async(task_id=task_id, kwargs={
         "content_img": content_image_path,
         "style_img": style_image_path,
@@ -76,6 +80,12 @@ async def generate(content_img: UploadFile, style_img: UploadFile):
         "id": task.id
     }
 
+@app.post("/stop/{task_id}")
+def stop_generation(task_id: str):
+    worker.control.revoke(task_id, terminate=True)
+    return {
+        "cancel": "success"
+    }
 
 @app.websocket("/status/{task_id}")
 async def task_status(task_id: str, websocket: WebSocket):
@@ -92,6 +102,6 @@ async def task_status(task_id: str, websocket: WebSocket):
             while True:
                 message = await psub.get_message(ignore_subscribe_messages=True)
                 if message:
-                    await websocket.send_json(str(message.get("data", ""), "UTF-8"))
+                    await websocket.send_json(json.loads(str(message.get("data", ""), "UTF-8")))
         except Exception as exc:
             print(exc)
